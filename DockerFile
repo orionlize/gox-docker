@@ -1,0 +1,35 @@
+FROM ubuntu:latest
+RUN apt update \
+&& apt install wget zip gcc g++ git make curl -y
+RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - \
+&& apt install -y nodejs
+WORKDIR /usr/local
+RUN wget https://github.com/zq2820/go/releases/download/gox1.18.1.beta1/gox-1.18.1-$(dpkg --print-architecture).zip \
+&& unzip gox-1.18.1-$(dpkg --print-architecture).zip \
+&& rm -f gox-1.18.1-$(dpkg --print-architecture).zip
+WORKDIR /root
+RUN echo "export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin\n \
+export GO111MODULE=on\n \
+export GOPATH=$HOME/go\n \
+export GOPROXY=https://proxy.golang.com.cn,direct\n \
+export GOROOT=/usr/local/go\n \
+export GOTOOLDIR=/usr/local/go/pkg/tool/linux_"$(dpkg --print-architecture) >> .bashrc
+RUN mkdir go \
+&& mkdir go/src \
+&& mkdir go/bin \
+&& cd go/bin \
+&& wget https://github.com/zq2820/tools/releases/download/gopls%2Fv0.10.0-beta1/gopls-linux-$(dpkg --print-architecture).zip \
+&& unzip gopls-linux-$(dpkg --print-architecture).zip \
+&& rm -f gopls-linux-$(dpkg --print-architecture).zip \
+&& wget https://github.com/zq2820/go-tools/releases/download/v0.4.0-1.dev/staticcheck-linux-$(dpkg --print-architecture).zip \
+&& unzip staticcheck-linux-$(dpkg --print-architecture).zip \
+&& rm -f staticcheck-linux-$(dpkg --print-architecture).zip \
+&& wget https://github.com/zq2820/x/releases/download/0.1.0-beta1/reactGen-linux-$(dpkg --print-architecture).zip \
+&& unzip reactGen-linux-$(dpkg --print-architecture).zip \
+&& rm -f reactGen-linux-$(dpkg --print-architecture).zip \
+&& wget https://github.com/zq2820/gopherjs/archive/refs/tags/v1.17.3-beta1.zip \
+&& unzip v1.17.3-beta1.zip \
+&& cd gopherjs-1.17.3-beta1  \
+&& /bin/bash -c "/usr/local/go/bin/go mod tidy" \
+&& /bin/bash -c "/usr/local/go/bin/go build" \
+&& mv gopherjs ../gopherjs
