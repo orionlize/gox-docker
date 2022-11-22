@@ -1,20 +1,28 @@
 FROM ubuntu:latest
+
+SHELL ["/bin/bash","-ic"]
+
+# 安装所需要的依赖
 RUN apt update \
 && apt install wget zip gcc g++ git make curl -y
 RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - \
 && apt install -y nodejs
+
+# 部署go标准库和环境变量
 WORKDIR /usr/local
 RUN wget https://github.com/zq2820/go/releases/download/gox1.18.1.beta1/gox-1.18.1-$(dpkg --print-architecture).zip \
 && unzip gox-1.18.1-$(dpkg --print-architecture).zip \
 && rm -f gox-1.18.1-$(dpkg --print-architecture).zip
 WORKDIR /root
-RUN echo "export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin\n \
-export GO111MODULE=on\n \
-export GOPATH=$HOME/go\n \
-export GOPROXY=https://proxy.golang.com.cn,direct\n \
-export GOROOT=/usr/local/go\n \
+RUN echo "export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin \n\
+export GO111MODULE=on \n\
+export GOPATH=$HOME/go \n\
+export GOPROXY=https://proxy.golang.com.cn,direct \n\
+export GOROOT=/usr/local/go \n\
 export GOTOOLDIR=/usr/local/go/pkg/tool/linux_"$(dpkg --print-architecture) >> .bashrc
-RUN mkdir go \
+
+# 部署go的可执行环境
+RUN source /root/.bashrc && go env && mkdir go \
 && mkdir go/src \
 && mkdir go/bin \
 && cd go/bin \
@@ -30,6 +38,11 @@ RUN mkdir go \
 && wget https://github.com/zq2820/gopherjs/archive/refs/tags/v1.17.3-beta1.zip \
 && unzip v1.17.3-beta1.zip \
 && cd gopherjs-1.17.3-beta1  \
-&& /bin/bash -c "/usr/local/go/bin/go mod tidy" \
-&& /bin/bash -c "/usr/local/go/bin/go build" \
-&& mv gopherjs ../gopherjs
+&& go mod tidy \
+&& go build \
+&& mv gopherjs ../gopherjs \
+&& go install github.com/cweill/gotests/gotests@v1.6.0 \
+&& go install github.com/fatih/gomodifytags@v1.16.0 \
+&& go install github.com/josharian/impl@v1.1.0 \
+&& go install github.com/haya14busa/goplay/cmd/goplay@v1.0.0 \
+&& go install github.com/go-delve/delve/cmd/dlv@latest
